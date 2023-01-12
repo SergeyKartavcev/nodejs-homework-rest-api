@@ -11,5 +11,5 @@ router.get("/:contactId",tryCatchWrapper(getContact));
 router.post("/",validateBody(contactSchema), tryCatchWrapper(addContactById));
 router.delete("/:contactId", tryCatchWrapper(removeContactById));
 router.put("/:contactId", tryCatchWrapper(updateContactById));
-
+router.patch("/:contactId/favorite", tryCatchWrapper(updateContactById));
 module.exports = router;
