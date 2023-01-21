@@ -1,10 +1,11 @@
-const { Contact } = require("../model/contact")
+const { Contact } = require("../model/contact");
 const { HttpError } = require("../helpers/helpers");
 
 async function getContacts(req, res) {
-  const contacts = await Contact.find({})
-  console.log("contacts", contacts);
-  res.status(200).json(contacts);
+  const { limit = 20, page = 1 } = req.query;
+  const skip = (page - 1) * limit;
+  const contacts = await Contact.find({}).skip(skip).limit(limit)
+  return res.status(200).json(contacts);
 }
 
 async function getContact(req, res, next) {
