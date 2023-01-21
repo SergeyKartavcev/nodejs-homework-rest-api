@@ -45,7 +45,7 @@ async function login(req, res, next) {
   }
  const isPasswordValid = await bcrypt.compare(password, loginUser.password);
   if (!isPasswordValid) {
-    throw new HttpError(401, "password is not valid");
+    throw new HttpError(401, "Email or password is wrong");
   }
   const token = jwt.sign({id: loginUser._id}, JWT_SECRET, {
     expiresIn: "1h"
@@ -59,13 +59,8 @@ async function login(req, res, next) {
 
 async function logout (req, res, next){
   const { _id } = req.body;
-  const logoutUser = User.findById(_id);
-  if(!logoutUser){
-    throw new HttpError(401, "Not authorized");
-  }
-
   await User.findByIdAndUpdate(_id, { token: null });
-  return res.status(204).json({
+  res.status(204).json({
     message: "User logged out ",
   });
 };

@@ -7,8 +7,8 @@ const { validateBody } = require("../../middlewares/index");
 const { userSchema} = require("../../middlewares/validate/schemas");
 
 router.post("/register", validateBody(userSchema), tryCatchWrapper(register));
-router.post("/login",tryCatchWrapper(login));
-router.get("/logout",tryCatchWrapper(logout));
+router.post("/login", validateBody(userSchema), tryCatchWrapper(login));
+router.get("/logout",tryCatchWrapper(auth), tryCatchWrapper(logout));
 router.get("/current",tryCatchWrapper(auth), tryCatchWrapper(getCurrent));
 
 module.exports = router;
