@@ -1,10 +1,9 @@
 const { User } = require("../model/user");
 const { HttpError } = require("../helpers/helpers");
 const bcrypt = require("bcrypt");
-const { json } = require("express");
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
-const {JWT_SECRET} = process.env;
+const { JWT_SECRET } = process.env;
 
 async function register(req, res, next) {
   const { email, password } = req.body;
@@ -43,29 +42,29 @@ async function login(req, res, next) {
   if (!loginUser) {
     throw new HttpError(401, "email is not valid");
   }
- const isPasswordValid = await bcrypt.compare(password, loginUser.password);
+  const isPasswordValid = await bcrypt.compare(password, loginUser.password);
   if (!isPasswordValid) {
     throw new HttpError(401, "Email or password is wrong");
   }
-  const token = jwt.sign({id: loginUser._id}, JWT_SECRET, {
-    expiresIn: "1h"
-  })
+  const token = jwt.sign({ id: loginUser._id }, JWT_SECRET, {
+    expiresIn: "1h",
+  });
   return res.json({
     data: {
-        token
-    }
+      token,
+    },
   });
 }
 
-async function logout (req, res, next){
+async function logout(req, res, next) {
   const { _id } = req.body;
   await User.findByIdAndUpdate(_id, { token: null });
   res.status(204).json({
     message: "User logged out ",
   });
-};
+}
 
-async function getCurrent (req, res, next){
+async function getCurrent(req, res, next) {
   const { email, subscription } = req.user;
   res.status(200).json({ email, subscription });
 }
@@ -74,5 +73,5 @@ module.exports = {
   register,
   login,
   logout,
-  getCurrent
+  getCurrent,
 };
