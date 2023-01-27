@@ -10,6 +10,10 @@ const userSchema = mongoose.Schema({
     required: [true, "Email is required"],
     unique: true,
   },
+  avatarUrl: {
+    type: String,
+    required: true,
+  },
   subscription: {
     type: String,
     enum: ["starter", "pro", "business"],
@@ -19,11 +23,13 @@ const userSchema = mongoose.Schema({
     type: String,
     default: "",
   },
-  owner: {
-   type: [mongoose.Types.ObjectId] ,
-  rel: "user"
-  },
-  
+  contacts: 
+  [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "contact",
+    },
+  ],
 });
 
 
