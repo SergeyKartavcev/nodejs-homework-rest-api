@@ -80,12 +80,15 @@ async function uploadAvatar(req, res, next) {
   try {
     await fs.rename(tmpPath, publicPath);
     const userId = req.params.id;
-    
-    // Jimp.read(avatarUrl, (error, filename) => {
-    //   if (error) throw error;
-    //   filename.resize(250, 250).write(avatarUrl);
-    // });
-
+    Jimp.read(avatarUrl)
+  .then(filename => {
+    return filename
+      .resize(250, 250) // resize
+      .write(avatarUrl); // save
+  })
+  .catch(err => {
+    err;
+  });
   await User.findByIdAndUpdate(userId, { avatarUrl });
   return res.json({
     message: "Avatar updated",
