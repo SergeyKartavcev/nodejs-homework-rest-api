@@ -1,16 +1,18 @@
 const { User } = require("../model/user");
-const { HttpError } = require("../helpers/helpers");
+const { HttpError, sendMail } = require("../helpers/helpers");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const gravatar = require("gravatar");
 const path = require("path");
 const fs = require("fs/promises");
 const Jimp = require("jimp");
+const { v4 } = require("uuid");
+
 const { JWT_SECRET } = process.env;
 
 async function register(req, res, next) {
   const { email, password } = req.body;
-
+  const verifyToken = v4();
   const salt = await bcrypt.genSalt();
   const hashedPassword = await bcrypt.hash(password, salt);
   const avatarUrl = gravatar.url(email);
@@ -19,6 +21,14 @@ async function register(req, res, next) {
       email,
       password: hashedPassword,
       avatarUrl,
+      verifyToken,
+      verify: false,
+    });
+
+    await sendMail({
+      to: email,
+      subject: "please confirm your email",
+      html: `<a href="localhost:3001/api/users/verify/${verifyToken}">confirm your email</a>`,
     });
 
     res.status(201).json({
@@ -45,6 +55,9 @@ async function login(req, res, next) {
   });
   if (!loginUser) {
     throw new HttpError(401, "email is not valid");
+  }
+  if (!loginUser.verify) {
+    throw new HttpError(401, "email is not varify, please chack your mail box");
   }
   const isPasswordValid = await bcrypt.compare(password, loginUser.password);
   if (!isPasswordValid) {
@@ -76,29 +89,27 @@ async function uploadAvatar(req, res, next) {
   const tmpPath = path.resolve(__dirname, "../tmp", filename);
   const publicPath = path.resolve(__dirname, "../public", filename);
   const avatarUrl = path.join("avatar", filename);
- 
+
   try {
     await fs.rename(tmpPath, publicPath);
     const userId = req.params.id;
     Jimp.read(avatarUrl)
-  .then(filename => {
-    return filename
-      .resize(250, 250) // resize
-      .write(avatarUrl); // save
-  })
-  .catch(err => {
-    err;
-  });
-  await User.findByIdAndUpdate(userId, { avatarUrl });
-  return res.json({
-    message: "Avatar updated",
-  });
+      .then((filename) => {
+        return filename
+          .resize(250, 250) // resize
+          .write(avatarUrl); // save
+      })
+      .catch((err) => {
+        err;
+      });
+    await User.findByIdAndUpdate(userId, { avatarUrl });
+    return res.json({
+      message: "Avatar updated",
+    });
   } catch (error) {
     await fs.unlink(tmpPath);
     throw error;
   }
-  
-
 }
 
 module.exports = {

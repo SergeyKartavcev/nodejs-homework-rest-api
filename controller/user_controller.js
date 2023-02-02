@@ -1,7 +1,8 @@
 const { User } = require("../model/user");
 const bcrypt = require("bcrypt");
-
-
+const { BadRequest } = require("http-errors");
+const { json } = require("express");
+const { sendMail } = require("../helpers/helpers")
 
 
 async function createContact(req, res, next) {
@@ -48,12 +49,54 @@ async function me(req, res, next) {
       },
     },
   });
+};
+
+
+async function verifyEmail(req, res, next) {
+  const { token } = req.params;
+  const user = await User.findOne({
+    verifyToken: token,
+  });
+
+  if (!user) {
+    throw BadRequest("Verify token is not valid!");
+  }
+
+  await User.findByIdAndUpdate(user._id, {
+    verify: true,
+    verifyToken: null,
+  });
+
+  return res.json({
+    message: "Success",
+  });
 }
 
+async function resendVerify(req, res, next) {
+  const { email } = req.body;
+  const user = await User.findOne({email});
+
+  if (!user) {
+    throw BadRequest("missing required field email");
+  }
+  if(user.verify){
+    throw BadRequest("Verification has already been passed");
+  }
+  await sendMail({
+    to: email,
+    subject: "please confirm your email",
+    html: `<a href="localhost:3001/api/users/verify/${user.verifyToken}">confirm your email</a>`,
+  });
 
 
+  return res.json({
+    message: "Success",
+  });
+}
 module.exports = {
   createContact,
   getContacts,
-  me
+  me,
+  verifyEmail,
+  resendVerify
 };
